@@ -5,19 +5,27 @@ import ResultList from '../components/ResultList';
 import { useRouter } from 'next/router';
 
 const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
+  if (!result) {
+    return <p>No result data available</p>;
+  }
+  const ruleId = result.ruleId || 'N/A';
+  const message = result.message?.text || 'N/A';
+  const location = result.locations?.[0]?.physicalLocation?.region?.startLine || 'N/A';
+  const severity = result.level || 'N/A';
+
   return (
     <div style={{ border: '1px solid #ccc', padding: '10px', margin: '10px', borderRadius: '5px' }}>
       <p>
-        <strong>Rule ID:</strong> {result.ruleId}
+        <strong>Rule ID:</strong> {ruleId}
       </p>
       <p>
-        <strong>Message:</strong> {result.message.text}
+        <strong>Message:</strong> {message}
       </p>
       <p>
-        <strong>Location:</strong> Line {result.locations[0].physicalLocation.region.startLine}
+        <strong>Location:</strong> Line {location}
       </p>
       <p>
-        <strong>Severity:</strong> {result.level}
+        <strong>Severity:</strong> {severity}
       </p>
       {/* Add more details as needed */}
     </div>
@@ -172,8 +180,7 @@ const Dashboard: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          <input 
-          {...getInputProps()} 
+          <input {...getInputProps()} 
           type="file"
           key={fileInputKey}
           onChange={handleFileChange}
