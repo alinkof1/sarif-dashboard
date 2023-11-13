@@ -41,16 +41,6 @@ const ResultList: React.FC<ResultListProps> = ({ results, onResultClick }) => {
           <p>
             <strong>Severity:</strong> {aggregatedResults[ruleId].results[0].level || 'N/A'}
           </p>
-          <p>
-            <strong>Locations:</strong>
-            {result.locations?.map((location, index) => (
-              <span key={index}>
-                {location.physicalLocation?.artifactLocation?.uri}:{' '}
-                Line {location.physicalLocation?.region?.startLine || 'N/A'}
-                {index < result.locations.length - 1 && ','}
-              </span>
-            ))}
-          </p>
         </div>
       ))}
     </div>
