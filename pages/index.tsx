@@ -22,7 +22,14 @@ const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
         <strong>Message:</strong> {message}
       </p>
       <p>
-        <strong>Location:</strong> Line {location}
+        <strong>Locations:</strong>
+        {result.locations?.map((location, index) => (
+          <span key={index}>
+            {location.physicalLocation?.artifactLocation?.uri}:{' '}
+            {location.physicalLocation?.region?.startLine || 'N/A'}
+            {index < result.locations.length - 1 && ','}
+          </span>
+        ))}
       </p>
       <p>
         <strong>Severity:</strong> {severity}
