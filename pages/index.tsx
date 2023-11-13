@@ -2,21 +2,30 @@
 import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ResultList from '../components/ResultList';
+import { useRouter } from 'next/router';
 
 const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
+  if (!result) {
+    return <p>No result data available</p>;
+  }
+  const ruleId = result.ruleId || 'N/A';
+  const message = result.message?.text || 'N/A';
+  const location = result.locations?.[0]?.physicalLocation?.region?.startLine || 'N/A';
+  const severity = result.level || 'N/A';
+
   return (
     <div style={{ border: '1px solid #ccc', padding: '10px', margin: '10px', borderRadius: '5px' }}>
       <p>
-        <strong>Rule ID:</strong> {result.ruleId}
+        <strong>Rule ID:</strong> {ruleId}
       </p>
       <p>
-        <strong>Message:</strong> {result.message.text}
+        <strong>Message:</strong> {message}
       </p>
       <p>
-        <strong>Location:</strong> Line {result.locations[0].physicalLocation.region.startLine}
+        <strong>Location:</strong> Line {location}
       </p>
       <p>
-        <strong>Severity:</strong> {result.level}
+        <strong>Severity:</strong> {severity}
       </p>
       {/* Add more details as needed */}
     </div>
@@ -24,12 +33,14 @@ const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
 };
 
 const Dashboard: React.FC = () => {
+  const router = useRouter();
   const [sarifData, setSarifData] = useState<any>(null);
   const [cachedSarifData, setCachedSarifData] = useState<any>(null);
   const [cacheResults, setCacheResults] = useState<boolean>(true); // Added cacheResults state
   const [selectedResult, setSelectedResult] = useState<number | null>(null);
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [fileInputKey, setFileInputKey] = useState<number>(0);
 
   useEffect(() => {
     // Load cached results when the component mounts
@@ -79,6 +90,18 @@ const Dashboard: React.FC = () => {
     setSarifData(null);
     setSelectedResult(null);
     setShowDetails(false);
+
+    // Reset the input element by changing its key
+    setFileInputKey((prevKey) => prevKey + 1);
+
+    // Navigate to the load SARIF page
+    //router.push('/load-sarif');
+    //onDrop();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file change if needed
+    // For example, you can read the selected file using event.target.files
   };
 
   const handleResultClick = (resultIndex: number) => {
@@ -157,7 +180,13 @@ const Dashboard: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          <input {...getInputProps()} />
+          <input {...getInputProps()} 
+          type="file"
+          key={fileInputKey}
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+          ref={(input) => input && input.setAttribute('accept', '.sarif')}
+          />
           <p style={{ fontSize: '16px', color: darkMode ? '#fff' : '#555' }}>
             Drag & drop a SARIF file here, or click to select one
           </p>
@@ -166,4 +195,5 @@ const Dashboard: React.FC = () => {
     </div>
   );
         }
+
   export default Dashboard;
