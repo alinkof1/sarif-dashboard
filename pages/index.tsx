@@ -1,10 +1,33 @@
 // pages/index.tsx
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import ChartComponent from '../components/ChartComponent';
+import ResultList from '../components/ResultList';
+
+const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
+  return (
+    <div style={{ border: '1px solid #ccc', padding: '10px', margin: '10px', borderRadius: '5px' }}>
+      <p>
+        <strong>Rule ID:</strong> {result.ruleId}
+      </p>
+      <p>
+        <strong>Message:</strong> {result.message.text}
+      </p>
+      <p>
+        <strong>Location:</strong> Line {result.locations[0].physicalLocation.region.startLine}
+      </p>
+      <p>
+        <strong>Severity:</strong> {result.level}
+      </p>
+      {/* Add more details as needed */}
+    </div>
+  );
+};
 
 const Dashboard: React.FC = () => {
   const [sarifData, setSarifData] = useState<any>(null);
+  const [selectedResult, setSelectedResult] = useState<number | null>(null);
+  const [showDetails, setShowDetails] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const onDrop = (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -15,12 +38,12 @@ const Dashboard: React.FC = () => {
       reader.onload = (event) => {
         try {
           const parsedData = JSON.parse(event.target?.result as string);
-
-          // Check if 'results' property is present and is an array
           if (parsedData.runs && parsedData.runs.length > 0 && parsedData.runs[0].results) {
             setSarifData(parsedData);
+            setSelectedResult(null); // Reset selected result when new data is loaded
+            setShowDetails(false); // Reset to high-level dashboard view
           } else {
-            console.error('SARIF file does not contain expected results data.');
+            console.error('SARIF file does not contain expected results data:', parsedData);
           }
         } catch (error) {
           console.error('Error parsing SARIF file:', error);
@@ -35,34 +58,72 @@ const Dashboard: React.FC = () => {
 
   const handleReset = () => {
     setSarifData(null);
+    setSelectedResult(null);
+    setShowDetails(false);
+  };
+
+  const handleResultClick = (resultIndex: number) => {
+    setSelectedResult(resultIndex);
+    setShowDetails(true);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
   };
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', textAlign: 'center', marginTop: '50px' }}>
-      <h1 style={{ marginBottom: '20px' }}>SARIF Dashboard</h1>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: darkMode ? '#333' : '#fff',
+        color: darkMode ? '#fff' : '#333',
+        transition: 'background-color 0.3s, color 0.3s',
+      }}
+    >
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>SARIF Dashboard</h1>
+        <label style={{ marginBottom: '10px' }}>
+          Dark Mode
+          <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} style={{ marginLeft: '5px' }} />
+        </label>
+      </div>
       {sarifData ? (
-        <div>
+        <div style={{ padding: '20px' }}>
           <button onClick={handleReset} style={{ marginBottom: '10px' }}>
             Upload Another File
           </button>
-          <div style={{ marginTop: '20px' }}>
-            <h2 style={{ marginBottom: '10px' }}>Visualization</h2>
-            <ChartComponent data={sarifData} />
-          </div>
+          {showDetails ? (
+            <div>
+              <button onClick={() => setShowDetails(false)} style={{ marginBottom: '10px' }}>
+                Back to High-Level Dashboard
+              </button>
+              <h2>Detailed Result View</h2>
+              {selectedResult !== null && sarifData.runs && sarifData.runs[0].results ? (
+                <ResultDetail result={sarifData.runs[0].results[selectedResult]} />
+              ) : (
+                <p style={{ marginTop: '20px', fontSize: '16px' }}>Select a result to view details</p>
+              )}
+            </div>
+          ) : (
+            <ResultList results={sarifData.runs[0].results} onResultClick={handleResultClick} />
+          )}
         </div>
       ) : (
         <div
           {...getRootProps()}
           style={{
-            border: '2px dashed #ccc',
+            border: darkMode ? '2px dashed #777' : '2px dashed #ccc',
             borderRadius: '4px',
             padding: '20px',
-            backgroundColor: '#f7f7f7',
+            backgroundColor: darkMode ? '#555' : '#f7f7f7',
             cursor: 'pointer',
+            textAlign: 'center',
           }}
         >
           <input {...getInputProps()} />
-          <p style={{ fontSize: '16px', color: '#555' }}>Drag & drop a SARIF file here, or click to select one</p>
+          <p style={{ fontSize: '16px', color: darkMode ? '#fff' : '#555' }}>
+            Drag & drop a SARIF file here, or click to select one
+          </p>
         </div>
       )}
     </div>
