@@ -43,11 +43,11 @@ const ResultList: React.FC<ResultListProps> = ({ results, onResultClick }) => {
           </p>
           <p>
             <strong>Locations:</strong>
-            {aggregatedResults[ruleId].results.map((result, index) => (
+            {result.locations?.map((location, index) => (
               <span key={index}>
-                {result.locations?.[0]?.physicalLocation?.artifactLocation?.uri}:{' '}
-                Line {result.locations?.[0]?.physicalLocation?.region?.startLine || 'N/A'}
-                {index < aggregatedResults[ruleId].results.length - 1 && ','}
+                {location.physicalLocation?.artifactLocation?.uri}:{' '}
+                Line {location.physicalLocation?.region?.startLine || 'N/A'}
+                {index < result.locations.length - 1 && ','}
               </span>
             ))}
           </p>
