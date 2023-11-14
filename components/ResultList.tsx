@@ -1,8 +1,10 @@
 // components/ResultList.tsx
 import React, { useState, useEffect } from 'react';
 
-const getSeverity = (ruleId: string, severityMapping: Record<string, string>): string => {
-  return severityMapping[ruleId] || 'Unknown';
+const getSeverity = (result: any): string => {
+  return result.runs && result.runs[0].rules && result.runs[0].rules[result.ruleId]
+    ? result.runs[0].rules[result.ruleId].defaultConfiguration.level
+    : 'Unknown';
 };
 
 const ResultItem: React.FC<{ result: any; onClick: () => void; severityMapping: Record<string, string> }> = ({ result, onClick, severityMapping }) => {
