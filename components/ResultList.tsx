@@ -1,35 +1,44 @@
 // components/ResultList.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-interface ResultListProps {
-  results: any[];
-  onResultClick: (index: number) => void;
-}
+const getSeverity = (result: any): string => {
+  if (result.runs && result.runs.length > 0 && result.runs[0].results) {
+    const ruleId = result.ruleId;
 
-const ResultList: React.FC<ResultListProps> = ({ results, onResultClick }) => {
+    // Find the rule with the matching ID
+    const rule = result.runs[0].rules.find((r: any) => r.id === ruleId);
+
+    // Check if the rule and its default configuration exist
+    if (rule && rule.defaultConfiguration) {
+      return rule.defaultConfiguration.level || 'Unknown';
+    }
+  }
+
+  return 'Unknown';
+};
+
+const ResultItem: React.FC<{ result: any; onClick: () => void }> = ({ result, onClick }) => {
+  return (
+    <div onClick={onClick} style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #ddd' }}>
+      <p>
+        <strong>Rule ID:</strong> {result.ruleId}
+      </p>
+      <p>
+        <strong>Severity:</strong> {getSeverity(result)}
+      </p>
+      <p>
+        <strong>Message:</strong> {result.message.text}
+      </p>
+    </div>
+  );
+};
+
+const ResultList: React.FC<{ results: any[]; onResultClick: (resultIndex: number) => void }> = ({ results, onResultClick }) => {
   return (
     <div>
-      <h2>Results List</h2>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {results.map((result, index) => (
-          <li
-            key={index}
-            onClick={() => onResultClick(index)}
-            style={{
-              cursor: 'pointer',
-              border: '1px solid #ccc',
-              padding: '10px',
-              margin: '5px',
-              borderRadius: '5px',
-              backgroundColor: '#f7f7f7',
-            }}
-          >
-            <strong>Rule ID:</strong> {result.ruleId}
-            <br />
-            <strong>Message:</strong> {result.message.text}
-          </li>
-        ))}
-      </ul>
+      {results.map((result, index) => (
+        <ResultItem key={index} result={result} onClick={() => onResultClick(index)} />
+      ))}
     </div>
   );
 };
