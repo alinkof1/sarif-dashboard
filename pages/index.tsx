@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone';
 import ResultList from '../components/ResultList';
 import { useRouter } from 'next/router';
 
-const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
+const ResultDetail: React.FC<{ result: any; severityMapping: Record<string, string> }> = ({ result, severityMapping }) => {
   return (
     <div style={{ border: '1px solid #ccc', padding: '10px', margin: '10px', borderRadius: '5px' }}>
       <p>
@@ -17,7 +17,7 @@ const ResultDetail: React.FC<{ result: any }> = ({ result }) => {
         <strong>Location:</strong> Line {result.locations[0].physicalLocation.region.startLine}
       </p>
       <p>
-        <strong>Severity:</strong> {result.level}
+        <strong>Severity:</strong> {severityMapping[result.ruleId] || 'Unknown'}
       </p>
       {/* Add more details as needed */}
     </div>
@@ -32,6 +32,7 @@ const Dashboard: React.FC = () => {
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [fileInputKey, setFileInputKey] = useState<number>(0);
+  const [severityMapping, setSeverityMapping] = useState<Record<string, string>>({}); // Added severityMapping state
 
   useEffect(() => {
     // Load cached results when the component mounts
@@ -40,6 +41,12 @@ const Dashboard: React.FC = () => {
       const parsedData = JSON.parse(cachedDataString);
       setCachedSarifData(parsedData);
       setSarifData(parsedData);
+      // Create the severity mapping when the component mounts
+      const mapping: Record<string, string> = {};
+      parsedData.runs[0].results.forEach((result: any) => {
+        mapping[result.ruleId] = result.level;
+      });
+      setSeverityMapping(mapping);
     }
   }, []);
 
@@ -59,6 +66,13 @@ const Dashboard: React.FC = () => {
             setShowDetails(false);
             // Cache the results in local storage
             localStorage.setItem('cachedSarifData', JSON.stringify(parsedData));
+
+            // Update the severity mapping when a new SARIF file is loaded
+            const mapping: Record<string, string> = {};
+            parsedData.runs[0].results.forEach((result: any) => {
+              mapping[result.ruleId] = result.level;
+            });
+            setSeverityMapping(mapping);
           } else {
             console.error('SARIF file does not contain expected results data:', parsedData);
           }
@@ -124,14 +138,18 @@ const Dashboard: React.FC = () => {
               </button>
               <h2>Detailed Result View</h2>
               {selectedResult !== null && sarifData.runs && sarifData.runs[0].results ? (
-                <ResultDetail result={sarifData.runs[0].results[selectedResult]} />
+                <ResultDetail result={sarifData.runs[0].results[selectedResult]} severityMapping={severityMapping} />
               ) : (
                 <p style={{ marginTop: '20px', fontSize: '16px' }}>Select a result to view details</p>
               )}
             </div>
           ) : (
             <div style={{ backgroundColor: darkMode ? '#444' : '#fff', padding: '10px', borderRadius: '5px' }}>
-              <ResultList results={sarifData ? sarifData.runs[0].results : cachedSarifData.runs[0].results} onResultClick={handleResultClick} />
+              <ResultList
+                results={sarifData ? sarifData.runs[0].results : cachedSarifData.runs[0].results}
+                onResultClick={handleResultClick}
+                severityMapping={severityMapping}
+              />
             </div>
           )}
         </div>
